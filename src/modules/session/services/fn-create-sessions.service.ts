@@ -44,7 +44,7 @@ export class FnCreateSessionService {
     userSession: IUserSession,
   ): Promise<ResponseGenericDto> {
     this.logger.debug(
-      `::execute::parameters::${JSON.stringify(requestCreateSessionDto)}`,
+      `::execute::parameters::${JSON.stringify(requestCreateSessionDto.sessionsDetails.length)}`,
     );
     try {
       const consulting = await this.consultingModel.findById(idConsulting);
@@ -83,7 +83,7 @@ export class FnCreateSessionService {
         this.homeService.callRegisterSession(sessionsInHome);
 
         return <ResponseGenericDto>{
-          message: 'Processo exitoso',
+          message: 'PE: Proceso exitoso',
           operation: `::${FnCreateSessionService.name}::execute`,
           data: <ResponseCreateSessionDto>{
             idConsulting,

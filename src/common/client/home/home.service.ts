@@ -28,7 +28,7 @@ export class HomeService {
     dto: TInput,
   ): Promise<TResult> {
     this.logger.debug(
-      `execute::callRegisterSession::params${JSON.stringify(dto)}`,
+      `execute::callRegisterSession::params${JSON.stringify(dto[0])}`,
     );
     const pattern = {
       subjet: 'client-home',

@@ -16,6 +16,7 @@ import {
   ResponseCreateConsultingDto,
 } from '../dto';
 import {
+  ICreateCalendarConsulting,
   ICreateClient,
   ICreateHomeConsulting,
   ICreateLogConsulting,
@@ -25,6 +26,7 @@ import { GENERAL } from 'src/const/general.const';
 import {
   CreateAndUpdateSecuenceInternalException,
   ExecuteInternalException,
+  RegisterCalendarConsultingInternalException,
   RegisterClientInternalException,
   RegisterConsultingInternalException,
   RegisterHomeConsultingInternalException,
@@ -35,6 +37,7 @@ import { ICreateConsulting } from '../interfaces/create-consulting.interface';
 import { LogService } from 'src/common/client/log/logs.service';
 import { IUserSession } from 'src/common/interfaces';
 import { HomeService } from 'src/common/client/home/home.service';
+import { UserService } from 'src/common/client/user/user.service';
 
 @Injectable()
 export class FnCreateConsultingService {
@@ -49,6 +52,7 @@ export class FnCreateConsultingService {
     private readonly secuenceModel: mongoose.Model<SecuencesDocument>,
     private readonly logsService: LogService,
     private readonly homeService: HomeService,
+    private readonly userService: UserService
   ) {}
 
   async execute(
@@ -61,7 +65,7 @@ export class FnCreateConsultingService {
 
     try {
       let idConsulting = '';
-      const { firstName, lastName, dni, telephone, reason, consultingDate } =
+      const { firstName, lastName, dni, telephone, reason, consultingDate, email } =
         requestCreateConsultingDto;
 
       const client = await this.clientModel.findOne({ dni });
@@ -89,6 +93,8 @@ export class FnCreateConsultingService {
         idConsulting = await this.createConsulting({
           idClient,
           dni,
+          email,
+          fullName: `${firstName} ${lastName}`,
           reason,
           consultingDate,
           consultingNumber,
@@ -97,6 +103,8 @@ export class FnCreateConsultingService {
         idConsulting = await this.createConsulting({
           idClient: client._id,
           dni,
+          email,
+          fullName: `${firstName} ${lastName}`,
           reason,
           consultingDate,
           consultingNumber,
@@ -111,7 +119,7 @@ export class FnCreateConsultingService {
       };
       this.registerLogConsulting(icreateLogConsulting);
 
-      const { formatDate, formatHour } =
+      const { formatDate, formatHour, formatHourAdd, day, month, year } =
         this.getLocalDateAndLocalTime(consultingDate);
       const icreateHomeConsulting: ICreateHomeConsulting = {
         idUser: userSession.idUser,
@@ -126,8 +134,29 @@ export class FnCreateConsultingService {
       };
       this.registerHomeConsulting(icreateHomeConsulting);
 
+      const date = new Date(consultingDate);
+      const formattedDate = date.toISOString().slice(0, 10);
+
+      const start = `${formattedDate} ${formatHour}`;
+      const end = `${formattedDate} ${formatHourAdd}`;
+      const title = `${firstName} ${lastName} ${reason}`;
+
+      const icreateCalendarConsulting: ICreateCalendarConsulting = {
+        idConsulting,
+        idUser: userSession.idUser,
+        title: title,
+        description: title,
+        start,
+        end,
+        day,
+        month,
+        year,
+        isConsulting: true
+      }
+      this.registerCalendarConsulting(icreateCalendarConsulting);
+
       return <ResponseGenericDto>{
-        message: 'Processo exitoso',
+        message: 'PE: Proceso exitoso',
         operation: `::${FnCreateConsultingService.name}::execute`,
         data: <ResponseCreateConsultingDto>{
           idConsulting,
@@ -171,11 +200,13 @@ export class FnCreateConsultingService {
     );
 
     try {
-      const { idClient, dni, reason, consultingDate, consultingNumber } =
+      const { idClient, fullName, dni, reason, consultingDate, consultingNumber, email } =
         icreateConsulting;
       const newClient = await this.consultingModel.create({
         idClient,
         dni,
+        fullName,
+        email,
         reason,
         consultingNumber,
         consultingDate,
@@ -238,8 +269,26 @@ export class FnCreateConsultingService {
     }
   }
 
+  private registerCalendarConsulting(
+    icreateCalendarConsulting: ICreateCalendarConsulting
+  ): void {
+    try {
+      this.userService.callCalendarRegister(icreateCalendarConsulting);
+    } catch (error) {
+      this.logger.error(error);
+      throw new RegisterCalendarConsultingInternalException();
+    }
+  }
+
   private getLocalDateAndLocalTime(consultingDate: Date) {
-    const formatDate: string = new Date(consultingDate).toLocaleDateString(
+
+    const formatConsultingDate = new Date(consultingDate);
+
+    const day = formatConsultingDate.toLocaleString('es-ES', { day: 'numeric' });
+    const month = formatConsultingDate.toLocaleString('es-ES', { month: 'numeric' });
+    const year = formatConsultingDate.toLocaleString('es-ES', { year: 'numeric' });
+
+    const formatDate: string = formatConsultingDate.toLocaleDateString(
       'es-ES',
       {
         day: '2-digit',
@@ -248,7 +297,7 @@ export class FnCreateConsultingService {
       },
     );
 
-    const formatHour: string = new Date(consultingDate).toLocaleTimeString(
+    const formatHour: string = formatConsultingDate.toLocaleTimeString(
       'es-ES',
       {
         hour: '2-digit',
@@ -256,6 +305,17 @@ export class FnCreateConsultingService {
       },
     );
 
-    return { formatDate, formatHour };
+    const [hours, minutes] = formatHour.split(":");
+
+    formatConsultingDate.setHours(parseInt(hours, 10), parseInt(minutes, 10) + 50)
+    const formatHourAdd =  formatConsultingDate.toLocaleTimeString(
+      'es-ES',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    );
+
+    return { formatDate, formatHour, formatHourAdd, day, month, year };
   }
 }

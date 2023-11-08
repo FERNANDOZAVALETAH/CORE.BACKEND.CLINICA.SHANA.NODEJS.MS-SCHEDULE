@@ -22,7 +22,7 @@ export class FnUpdateStatusConsultingService {
       });
 
       return <ResponseGenericDto>{
-        message: 'Processo exitoso',
+        message: 'PE: Proceso exitoso',
         operation: `::${FnUpdateStatusConsultingService.name}::execute`,
         data: <ResponseUpdateStatusConsultingDto>{
           idConsulting,

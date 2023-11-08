@@ -21,7 +21,7 @@ import {
   RegisterClientInternalException,
   RegisterConsultingInternalException,
 } from 'src/exception';
-import { RequestCreateConsultingDto } from './dto';
+import { RequestCreateConsultingDto, RequestGetConsultingDto } from './dto';
 import { AccessGuard } from 'src/common/guards/access.guard';
 import { RequiredPermisions, UserDecorator } from 'src/common/decorator';
 import { Permision } from 'src/common/enums';
@@ -112,11 +112,10 @@ export class ConsultingController {
   @RequiredPermisions(Permision.CONSULTING_READ)
   @Throttle()
   @Get('/')
-  getByTypeAndValue(
-    @Query('type') type: string,
-    @Query('value') value: string,
-  ): Promise<ResponseGenericDto> {
-    return this.fnFindConsulting.execute({ type, value });
+  findAll(
+    @Query() query: RequestGetConsultingDto
+  ): Promise<ResponseGenericDto | [ResponseGenericDto]> {
+    return this.fnFindConsulting.execute(query, null);
   }
 
   @ApiCreatedResponse({

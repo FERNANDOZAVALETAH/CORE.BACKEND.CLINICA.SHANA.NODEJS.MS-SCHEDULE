@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class ResponseGetConsultingDto {
   @IsString()
@@ -15,6 +15,11 @@ export class ResponseGetConsultingDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
+  reason: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
   dni: string;
 
   @IsString()
@@ -26,4 +31,10 @@ export class ResponseGetConsultingDto {
   @IsNotEmpty()
   @ApiProperty()
   consultingDate: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  status: number;
+
 }

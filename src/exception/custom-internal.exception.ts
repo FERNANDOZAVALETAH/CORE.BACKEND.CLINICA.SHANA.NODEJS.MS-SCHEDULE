@@ -31,6 +31,12 @@ export class RegisterHomeConsultingInternalException extends InternalServerError
   }
 }
 
+export class RegisterCalendarConsultingInternalException extends InternalServerErrorException {
+  constructor() {
+    super(`${GENERAL.EXCEPTION_CODE.REGISTER_CALENDAR_CONSULTING}`);
+  }
+}
+
 export class CreateAndUpdateSecuenceInternalException extends InternalServerErrorException {
   constructor() {
     super(`${GENERAL.EXCEPTION_CODE.CREATE_SECUENCE}`);

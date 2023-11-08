@@ -10,6 +10,7 @@ import { AccessModule } from './common/client/access/access.module';
 import { LogModule } from './common/client/log/logs.module';
 import { HomeModule } from './common/client/home/home.module';
 import { SessionModule } from './modules/session/session.module';
+import { UserModule } from './common/client/user/user.module';
 
 @Module({
   imports: [
@@ -53,6 +54,13 @@ import { SessionModule } from './modules/session/session.module';
       useFactory: (configService: ConfigService) =>
         configService.get('client.home'),
       inject: [ConfigService],
+    }),
+    UserModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) =>
+        configService.get('client.user'),
+      inject: [ConfigService]
     }),
     ConsultingModule,
     SessionModule,

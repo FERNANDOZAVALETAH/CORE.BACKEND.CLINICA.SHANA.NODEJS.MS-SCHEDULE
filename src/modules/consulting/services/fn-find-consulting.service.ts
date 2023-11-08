@@ -8,7 +8,7 @@ import {
   Consultings,
   ConsultingsDocument,
 } from 'src/common/schemas';
-import { ResponseGetConsultingDto, ResponseGetConsultingIdDto } from '../dto';
+import { RequestGetConsultingDto, ResponseGetConsultingDto, ResponseGetConsultingIdDto } from '../dto';
 import { IFindConsultingTypeValue } from '../interfaces';
 import {
   ConsultingNotFoundException,
@@ -26,57 +26,68 @@ export class FnFindConsultingService {
     private readonly clientModel: mongoose.Model<ClientsDocument>,
   ) {}
 
-  async execute(
-    ifindConsultingTypeValue: IFindConsultingTypeValue,
-    idConsulting?: string,
-  ): Promise<ResponseGenericDto> {
+
+  async execute(query: RequestGetConsultingDto, idConsulting: string): Promise<any> {
     this.logger.debug(
-      `::execute::parameters::${JSON.stringify(ifindConsultingTypeValue)}`,
+      `::execute::findAll::parameters::${JSON.stringify(query)}`,
     );
 
     try {
-      if (idConsulting != undefined || idConsulting != null) {
+
+      let filter : any = {};
+
+      if(idConsulting) {
         return await this.findById(idConsulting);
       }
 
-      const { type, value } = ifindConsultingTypeValue;
-      let responseCreateConsulting: ConsultingsDocument = null;
-      if (type == 'DNI') {
-        responseCreateConsulting = await this.consultingModel.findOne({
-          dni: value,
-        });
+      if(query.status != 'ALL') {
+        filter.status = parseInt(query.status)
       }
 
-      if (type == 'CONSULTING_DATE') {
-        responseCreateConsulting = await this.consultingModel.findOne({
-          $or: [{}, {}],
-        });
+      if(query.docNumber) {
+        filter.$or = [{
+          consultingNumber: query.docNumber
+        }, {
+          dni: query.docNumber
+        }]
       }
 
-      if (type == 'CONSULTING_NUMBER') {
-        responseCreateConsulting = await this.consultingModel.findOne({
-          consultingNumber: value,
-        });
+      if(query.email) {
+        filter.email = query.email
       }
 
-      if (!responseCreateConsulting) {
-        throw new ConsultingNotFoundException();
+      if(query.startDate && query.endDate) {
+        filter.consultingDate = {
+          $gte: new Date(query.startDate),
+          $lte: new Date(query.endDate),
+        }
       }
-
-      const client = await this.clientModel.findById(
-        responseCreateConsulting.idClient,
+      this.logger.debug(
+        `::execute::findAll::filter::${JSON.stringify(filter)}`,
       );
+      const consultings = await this.consultingModel.find(filter);
+      let responseGetConsultings: ResponseGetConsultingDto[] = [];
+      for (const consulting of consultings) {
+        const { formatDate, formatHour } =
+        this.getLocalDateAndLocalTime(consulting.consultingDate);
+
+        responseGetConsultings.push({
+          client: consulting.fullName,
+          idConsulting: consulting._id,
+          dni: consulting.dni,
+          consultingNumber: consulting.consultingNumber,
+          consultingDate:  `${formatDate} ${formatHour}`,
+          status: consulting.status,
+          reason: consulting.reason
+        })
+      }
 
       return <ResponseGenericDto>{
-        message: 'Processo exitoso',
+        message: 'PE: Proceso exitoso',
         operation: `::${FnFindConsultingService.name}::execute`,
-        data: <ResponseGetConsultingDto>{
-          idConsulting: responseCreateConsulting._id,
-          client: `${client.firstName} ${client.lastName}`,
-          dni: responseCreateConsulting.dni,
-          consultingNumber: responseCreateConsulting.consultingNumber,
-        },
+        data: responseGetConsultings,
       };
+
     } catch (error) {
       this.logger.error(error);
       throw new ExecuteInternalException(`${FnFindConsultingService.name}`);
@@ -84,17 +95,49 @@ export class FnFindConsultingService {
   }
 
   private async findById(idConsulting): Promise<any> {
+    this.logger.debug(
+      `::execute::findById::parameters::${JSON.stringify(idConsulting)}`,
+    );
     const consulting = await this.consultingModel.findById(idConsulting);
     const client = await this.clientModel.findById(consulting.idClient);
+
+    const { formatDate, formatHour } =
+    this.getLocalDateAndLocalTime(consulting.consultingDate);
+
     return <ResponseGenericDto>{
-      message: 'Processo exitoso',
+      message: 'PE: Proceso exitoso',
       operation: `::${FnFindConsultingService.name}::execute`,
       data: <ResponseGetConsultingIdDto>{
         idConsulting: consulting._id,
-        client: `${client.firstName} ${client.lastName}`,
+        client: consulting.fullName,
+        email: consulting.email,
         dni: consulting.dni,
         consultingNumber: consulting.consultingNumber,
+        reason: consulting.reason,
+        formatDate,
+        formatHour
       },
     };
+  }
+
+  private getLocalDateAndLocalTime(consultingDate: Date) {
+    const formatDate: string = new Date(consultingDate).toLocaleDateString(
+      'es-ES',
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      },
+    );
+
+    const formatHour: string = new Date(consultingDate).toLocaleTimeString(
+      'es-ES',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    );
+
+    return { formatDate, formatHour };
   }
 }

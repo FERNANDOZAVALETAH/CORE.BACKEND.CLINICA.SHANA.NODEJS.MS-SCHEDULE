@@ -1,3 +1,4 @@
+export * from './create-calendar-consulting.interface';
 export * from './create-client.interface';
 export * from './create-consulting.interface';
 export * from './create-home-consulting.interface';

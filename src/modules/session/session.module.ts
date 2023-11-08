@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Consultings, ConsultingsSchema } from 'src/common/schemas';
+import { Clients, ClientsSchema, Consultings, ConsultingsSchema } from 'src/common/schemas';
 import { CryptoModule } from 'src/common/crypto/crypto.module';
 import { SessionController } from './session.controller';
 import { FnCreateSessionService } from './services/fn-create-sessions.service';
@@ -10,8 +10,12 @@ import { FnCreateSessionService } from './services/fn-create-sessions.service';
     MongooseModule.forFeature([
       {
         name: Consultings.name,
-        schema: ConsultingsSchema,
+        schema: ConsultingsSchema
       },
+      {
+        name: Clients.name,
+        schema: ClientsSchema
+      }
     ]),
     CryptoModule,
   ],

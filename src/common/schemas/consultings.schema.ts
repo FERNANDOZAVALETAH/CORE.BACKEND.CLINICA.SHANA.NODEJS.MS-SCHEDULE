@@ -10,6 +10,12 @@ export class Consultings {
   idClient: mongoose.Schema.Types.ObjectId;
 
   @Prop({ required: true })
+  fullName: string;
+  
+  @Prop({ })
+  email: string;
+
+  @Prop({ required: true })
   dni: string;
 
   @Prop({ required: true, unique: true })

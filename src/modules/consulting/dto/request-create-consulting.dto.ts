@@ -38,6 +38,10 @@ export class RequestCreateConsultingDto {
   reason: string;
 
   @IsString()
+  @ApiProperty()
+  email: string;
+
+  @IsString()
   @Validate(DatePipe)
   @ApiProperty()
   consultingDate: Date;

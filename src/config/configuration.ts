@@ -21,6 +21,10 @@ export default () => ({
       host: process.env.CLIENT_HOME_HOST,
       port: process.env.CLIENT_HOME_PORT,
     },
+    user: {
+      host: process.env.CLIENT_USER_HOST,
+      port: process.env.CLIENT_USER_PORT
+    }
   },
   swagger: {
     basePath: process.env.SWAGGER_BASE_PATH,

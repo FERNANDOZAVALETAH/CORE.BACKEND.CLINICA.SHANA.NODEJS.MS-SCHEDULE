@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ResponseCreateConsultingDto } from 'src/modules/consulting/dto';
+import { ResponseCreateConsultingDto, ResponseGetConsultingDto } from 'src/modules/consulting/dto';
 
 export class ResponseGenericDto {
   @ApiProperty()
@@ -9,5 +9,5 @@ export class ResponseGenericDto {
   operation: string;
 
   @ApiProperty()
-  data: ResponseCreateConsultingDto;
+  data: ResponseCreateConsultingDto | [ResponseGetConsultingDto];
 }

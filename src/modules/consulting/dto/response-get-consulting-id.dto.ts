@@ -14,5 +14,14 @@ export class ResponseGetConsultingIdDto {
   consultingNumber: string;
 
   @ApiProperty()
-  consultingDate: string;
+  formatDate: string;
+
+  @ApiProperty()
+  formatHour: string;
+
+  @ApiProperty()
+  reason: string;
+
+  @ApiProperty()
+  email: string;
 }
